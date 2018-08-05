@@ -10,7 +10,7 @@ import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineEvent;
 import javax.sound.sampled.LineListener;
 
-public class SoundInvoker {
+public class Notifier {
 
 	public static void playSound() throws Exception {
 		
