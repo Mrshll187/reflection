@@ -4,24 +4,64 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
 import org.reflections.Reflections;
 
+import xxx.xxx.App;
 import xxx.xxx.annotation.AutoWired;
 import xxx.xxx.annotation.Controller;
+import xxx.xxx.annotation.Service;
 
 public class Instantiator {
 
 	private static Logger logger = Logger.getLogger(Instantiator.class.getName());
 
-	private static HashMap<Class<?>, Object> instantiatedClasses = new HashMap<>();
+	private static ConcurrentHashMap<Class<?>, Object> instantiatedClasses = new ConcurrentHashMap<>();
 
-	private static void checkClassDepenecies(Class<?> clazz) {
+	private static void instantiateClass(Class<?> clazz) {
 
-		Object parent = instantiateComponent(clazz);
+		if (instantiatedClasses.containsKey(clazz))
+			return;
+
+		Object parent = null;
+		
+		Constructor<?> constructor = clazz.getConstructors()[0];
+		constructor.setAccessible(true);
+		
+		try {
+			
+			parent = constructor.newInstance();
+		}
+		catch(Exception e) {
+			
+			logger.severe("Failure instantiating class " + clazz.getName() + " Problem : " + e.getMessage());
+			System.exit(1);
+		}
+		
+		for (Method method : clazz.getMethods()) {
+
+			if (method.isAnnotationPresent(PostConstruct.class)) {
+
+				try {
+
+					method.invoke(parent);
+					constructor.setAccessible(false);
+
+					instantiatedClasses.put(clazz, parent);
+					
+					logger.info("Instantiated class : " + clazz.getName());
+				} 
+				catch (Exception e) {
+
+					logger.severe("Failure invoking @PostContruct method " + method.getName()+ " in class " + clazz.getName());
+					System.exit(1);
+				}
+			}
+		}
 		
 		for (Field field : clazz.getDeclaredFields()) {
 
@@ -29,58 +69,31 @@ public class Instantiator {
 
 				try {
 
+					Class<?> autowiredClass = field.getType();
+					
 					field.setAccessible(true);
-					Object autowiredObject = field.getType().newInstance();
-
-					field.set(parent, autowiredObject);
+					field.set(parent, autowiredClass.newInstance());
 					field.setAccessible(false);
+					
+					logger.info("Instantiated class : " + autowiredClass.getName());
 				} 
 				catch (Exception e) {
 
-					logger.severe("Failure invoking class " + clazz.getName() + " Problem : " + e.getMessage());
+					logger.severe("Failure invoking @AutoWired field " + field.getName()+ " in class " + clazz.getName());
 					System.exit(1);
 				}
 			}
 		}
-		
 	}
-
-	private static Object instantiateComponent(Class<?> clazz) {
-
-		if (instantiatedClasses.containsKey(clazz))
-			return instantiatedClasses.get(clazz);
-
-		for (Method method : clazz.getMethods()) {
-
-			if (method.isAnnotationPresent(PostConstruct.class)) {
-
-				try {
-
-					Constructor<?> constructor = clazz.getConstructors()[0];
-					constructor.setAccessible(true);
-					Object object = constructor.newInstance();
-
-					method.invoke(object);
-					constructor.setAccessible(false);
-
-					instantiatedClasses.put(clazz, object);
-					
-					return object;
-					
-				} catch (Exception e) {
-
-					logger.severe("Failure invoking class " + clazz.getName() + " Problem : " + e.getMessage());
-					System.exit(1);
-				}
-			}
-		}
-		
-		return null;
-	}
-
+	
 	public static void start() {
-
-		for (Class<?> clazz : new Reflections("xxx").getTypesAnnotatedWith(Controller.class))
-			checkClassDepenecies(clazz);
+		
+		Reflections reflections = new Reflections(App.class.getPackage().getName());
+		
+		for (Class<?> clazz : reflections.getTypesAnnotatedWith(Service.class))
+			instantiateClass(clazz);
+		
+		for (Class<?> clazz : reflections.getTypesAnnotatedWith(Controller.class))
+			instantiateClass(clazz);
 	}
 }
