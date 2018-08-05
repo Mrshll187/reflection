@@ -32,7 +32,6 @@ public class Instantiator {
 					field.setAccessible(true);
 					Object autowiredObject = field.getType().newInstance();
 
-					// WHY CANT I SET THIS?
 					field.set(parent, autowiredObject);
 					field.setAccessible(false);
 				} 
