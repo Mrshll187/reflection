@@ -48,6 +48,19 @@ public class Instantiator {
 
 				try {
 
+					boolean validInitMethdod =  method.getParameterTypes().length == 0;
+					if(!validInitMethdod) {
+						
+						logger.severe("Remove parameters from @PostContruct method in "+clazz.getName());
+						System.exit(1);
+					}
+					
+					if(method.getReturnType() != Void.TYPE) {
+						
+						logger.severe("Please set return type to 'void' for @PostContruct method in "+clazz.getName());
+						System.exit(1);
+					}
+					
 					method.invoke(parent);
 					constructor.setAccessible(false);
 

@@ -7,9 +7,6 @@ import xxx.xxx.util.Notifier;
 public class PropertyService {
 
 	public String getEntry(String key) throws Exception {
-		
-		Notifier.playSound();
-		
 		return "I'm alive in Property Service : " + key;
 	}
 }
