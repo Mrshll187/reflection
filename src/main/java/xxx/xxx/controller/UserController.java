@@ -2,11 +2,14 @@ package xxx.xxx.controller;
 
 import javax.annotation.PostConstruct;
 
+import com.google.gson.JsonArray;
 import spark.Spark;
 import xxx.xxx.annotation.AutoWired;
 import xxx.xxx.annotation.Controller;
+import xxx.xxx.model.Payload;
 import xxx.xxx.service.DatabaseService;
 import xxx.xxx.service.PropertyService;
+import xxx.xxx.util.FormatUtil;
 
 @Controller
 public class UserController {
@@ -22,28 +25,61 @@ public class UserController {
 		
 		Spark.get("/user/:key", (req, res) -> {
 
-			String key = req.params(":key");
-			String entry = databaseService.getEntry(key);
+			res.type("application/json");
 			
-			return entry;			
+			String key = req.params(":key");
+			String value = databaseService.get(key);
+			
+			return FormatUtil.fromObjectToString(new Payload(key, value));			
+		});
+		
+		Spark.post("/user", (req, res) -> {
+
+			String body = req.body();
+			Payload payload = FormatUtil.stringToPayload(body);
+			
+			databaseService.save(payload.getKey(), payload.getValue());
+			
+			String value = databaseService.get(payload.getKey());
+			
+			if(value.equals(payload.getValue()))
+				return true;
+			else
+				return false; 			
+		});
+		
+		Spark.put("/user", (req, res) -> {
+
+			String body = req.body();
+			Payload payload = FormatUtil.stringToPayload(body);
+			
+			databaseService.save(payload.getKey(), payload.getValue());
+			
+			if(databaseService.exists(payload.getKey()))
+				return true;
+			else
+				return false;			
 		});
 		
 		Spark.delete("/user/:key", (req, res) -> {
-
-			String key = req.params(":key");
-			Boolean success = databaseService.delete(key);
 			
-			return success.toString();			
+			String key = req.params(":key");
+			
+			databaseService.delete(key);
+			
+			if(databaseService.exists(key))
+				return false;
+			else
+				return true;
 		});
 		
-		Spark.put("/user/:key/:value", (req, res) -> {
-
-			String key = req.params(":key");
-			String value = req.params(":value");
+		Spark.get("/list", (req, res) -> {
 			
-			Boolean success = databaseService.saveEntry(key, value);
+			res.type("application/json");
 			
-			return success.toString(); 			
+			JsonArray entries = databaseService.list();
+			
+			return FormatUtil.jsonToString(entries);		
 		});
 	}
 }

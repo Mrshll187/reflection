@@ -18,7 +18,7 @@ public class BaseController {
 				
 		Spark.get("/", (req, res) -> {
 
-			return databaseService.getEntry("test");			
+			return "Running...";			
 		});
 	}
 }

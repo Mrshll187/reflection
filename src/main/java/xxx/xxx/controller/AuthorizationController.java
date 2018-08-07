@@ -1,5 +1,7 @@
 package xxx.xxx.controller;
 
+import java.util.Date;
+
 import javax.annotation.PostConstruct;
 
 import spark.Spark;
@@ -20,7 +22,7 @@ public class AuthorizationController {
 		Spark.before((requet, response) ->{
 		
 			Notifier.playSound();
-			System.out.println("Caught .....");
+			System.out.println("Caught Request " + new Date());
 		});
 	}
 }
