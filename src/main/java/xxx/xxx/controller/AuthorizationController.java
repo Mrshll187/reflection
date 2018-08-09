@@ -22,7 +22,7 @@ public class AuthorizationController {
 		Spark.before((requet, response) ->{
 		
 			Notifier.playSound();
-			System.out.println("Caught Request " + new Date());
+			System.out.println("Incoming Request " + new Date());
 		});
 	}
 }

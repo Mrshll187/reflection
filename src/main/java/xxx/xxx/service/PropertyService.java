@@ -1,28 +1,38 @@
 package xxx.xxx.service;
 
+import java.io.IOException;
 import java.util.Date;
+import java.util.Properties;
+import java.util.logging.Level;
 
 import javax.annotation.PostConstruct;
 
-import xxx.xxx.annotation.AutoWired;
+import xxx.LifeCycleManager;
 import xxx.xxx.annotation.Service;
-import xxx.xxx.util.Notifier;
 
 @Service
 public class PropertyService {
 
 	private Date startTime = new Date();
 	
+	private Properties properties = new Properties();
+	
 	@PostConstruct
 	public void init() {
-		System.out.println("I was started");
+		
+		try {			
+			properties.load(getClass().getResource("/system.properties").openStream());
+		} 
+		catch (IOException e) {
+			LifeCycleManager.shutDown(e.getMessage(), Level.SEVERE);
+		}
 	}
 	
 	public Date getStartTime() {
 		return startTime;
 	}
 	
-	public String getDatabasePath() {
-		return System.getProperty("user.home") + "/database";
+	public synchronized String getProperty(String key){
+		return properties.getProperty(key);
 	}
 }
