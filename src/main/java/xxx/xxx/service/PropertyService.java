@@ -11,7 +11,7 @@ import xxx.LifeCycleManager;
 import xxx.xxx.annotation.Service;
 
 @Service
-public class PropertyService {
+public class PropertyService implements PropertyLoader {
 
 	private Date startTime = new Date();
 	

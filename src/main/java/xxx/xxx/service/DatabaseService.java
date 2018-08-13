@@ -19,7 +19,7 @@ import xxx.xxx.annotation.Property;
 import xxx.xxx.annotation.Service;
 
 @Service
-public class DatabaseService {
+public class DatabaseService implements Database {
 
 	private Logger logger = Logger.getLogger(DatabaseService.class.getName());
 	
